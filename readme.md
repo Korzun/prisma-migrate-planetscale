@@ -26,3 +26,4 @@ To use the contained scripts, you'll need to create a service token using the Pl
 * The PlanetScale's CLI creates an environmental variable `DATABASE_URL` when using the `pscale connect` command. This variable will overwrite any existing variable of the same name. This behavior can cause some [head-scratching](https://github.com/prisma/prisma/issues/7341).
 * The PlanetScale CLI doesn't allow pull-requests to be created despite having the correct permissions.
 * The PlanetScale CLI `connect` command doesn't wait for a newly created branch to be available, it just fails to connect. These scripts wait 10 seconds to side-step this issue.
+* The PlanetScale CLI won't install on `node:lts-alpine` as it reports as `musl-linux-amd64` instead of `amd64`. Using the `dpkg` `--force-architecture` flag works.
