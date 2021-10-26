@@ -2,20 +2,13 @@
 
 # Database Connection
 export DATABASE="mysql://root@127.0.0.1:3309/${PLANETSCALE_DATABASE_NAME}"
-export DATABASE_SHADOW="mysql://root@127.0.0.1:3308/${PLANETSCALE_DATABASE_NAME}"
 
 # Name
 export PLANETSCALE_BRANCH_DATE=$(date '+%Y%m%d%H%M%S')
 export PLANETSCALE_BRANCH_NAME_MIGRATE="${PLANETSCALE_BRANCH_DATE}-${PLANETSCALE_BRANCH_SUFFIX_MIGRATE}"
-export PLANETSCALE_BRANCH_NAME_SHADOW="${PLANETSCALE_BRANCH_DATE}-${PLANETSCALE_BRANCH_SUFFIX_SHADOW}"
 
 # Create Migration Branches
 pscale branch create $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_MIGRATE \
---org $PLANETSCALE_ORG_NAME \
---service-token $PLANETSCALE_SERVICE_TOKEN \
---service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
---from $PLANETSCALE_BRANCH_UPSTREAM
-pscale branch create $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_SHADOW \
 --org $PLANETSCALE_ORG_NAME \
 --service-token $PLANETSCALE_SERVICE_TOKEN \
 --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
@@ -29,12 +22,7 @@ pscale connect $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_MIGRATE --por
 --org $PLANETSCALE_ORG_NAME \
 --service-token $PLANETSCALE_SERVICE_TOKEN \
 --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
---execute \
-"pscale connect $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_SHADOW --port 3308 \
---org $PLANETSCALE_ORG_NAME \
---service-token $PLANETSCALE_SERVICE_TOKEN \
---service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
---execute 'npx prisma migrate dev --skip-seed --skip-generate'"
+--execute 'npx prisma migrate deploy'
 
 # Open Deploy Request (Doesn't appear to work yet)
 # pscale deploy-request create $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_MIGRATE \
@@ -42,10 +30,3 @@ pscale connect $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_MIGRATE --por
 # --org $PLANETSCALE_ORG_NAME \
 # --service-token $PLANETSCALE_SERVICE_TOKEN \
 # --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
-
-# Clean up Shadow Branch
-pscale branch delete $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_NAME_SHADOW \
---org $PLANETSCALE_ORG_NAME \
---service-token $PLANETSCALE_SERVICE_TOKEN \
---service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
---force

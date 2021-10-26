@@ -6,17 +6,14 @@ Migrate:
   image: node:lts-alpine
   variables: 
     PLANETSCALE_BRANCH_MIGRATE_SUFFIX: "migrate"
-    PLANETSCALE_BRANCH_SHADOW_SUFFIX: "shadow"
     PLANETSCALE_BRANCH_UPSTREAM_NAME: "main"
     PLANETSCALE_DATABASE_NAME: #Generate at https://app.planetscale.com/
     PLANETSCALE_ORG_NAME: 
     PLANETSCALE_SERVICE_TOKEN_NAME: #Generate at https://app.planetscale.com/
     PLANETSCALE_SERVICE_TOKEN: #Generate at https://app.planetscale.com/
     # Calculated
-    DATABASE_SHADOW: "mysql://root@127.0.0.1:3308/${PLANETSCALE_DATABASE_NAME}"
     DATABASE: "mysql://root@127.0.0.1:3309/${PLANETSCALE_DATABASE_NAME}"
     PLANETSCALE_BRANCH_MIGRATE_NAME: "${CI_COMMIT_SHORT_SHA}-${PLANETSCALE_BRANCH_MIGRATE_SUFFIX}"
-    PLANETSCALE_BRANCH_SHADOW_NAME: "${CI_COMMIT_SHORT_SHA}-${PLANETSCALE_BRANCH_SHADOW_SUFFIX}"
   before_script:
     - apk add --update npm dpkg
     - TEMP_DEB="$(mktemp)" &&
@@ -30,11 +27,6 @@ Migrate:
       --service-token $PLANETSCALE_SERVICE_TOKEN
       --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
       --from $PLANETSCALE_BRANCH_UPSTREAM_NAME
-    - pscale branch create $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_SHADOW_NAME
-      --org $PLANETSCALE_ORG_NAME
-      --service-token $PLANETSCALE_SERVICE_TOKEN
-      --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
-      --from $PLANETSCALE_BRANCH_UPSTREAM_NAME
     # Breathing Room
     - sleep 10
     # Create Connections & Migrate
@@ -42,21 +34,10 @@ Migrate:
       --org $PLANETSCALE_ORG_NAME
       --service-token $PLANETSCALE_SERVICE_TOKEN
       --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
-      --execute
-      "pscale connect $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_SHADOW_NAME --port 3308 \
-      --org $PLANETSCALE_ORG_NAME \
-      --service-token $PLANETSCALE_SERVICE_TOKEN \
-      --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME \
-      --execute 'npx prisma migrate dev --skip-seed --skip-generate'"
+      --execute 'npx prisma migrate deploy'
     # Open Deploy Request (Doesn't appear to work yet)
     # - pscale deploy-request create $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_MIGRATE_NAME
     #   --deploy-to $PLANETSCALE_BRANCH_UPSTREAM_NAME
     #   --org $PLANETSCALE_ORG_NAME
     #   --service-token $PLANETSCALE_SERVICE_TOKEN
     #   --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
-    # Clean up Shadow Branch
-    - pscale branch delete $PLANETSCALE_DATABASE_NAME $PLANETSCALE_BRANCH_SHADOW_NAME
-      --org $PLANETSCALE_ORG_NAME
-      --service-token $PLANETSCALE_SERVICE_TOKEN
-      --service-token-name $PLANETSCALE_SERVICE_TOKEN_NAME
-      --force
